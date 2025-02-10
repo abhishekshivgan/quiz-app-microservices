@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  service-registry:
+    build: ./service-registry
+    container_name: service-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - quiz-network
+
+  quiz-service:
+    build: ./quiz-service
+    container_name: quiz-service
+    ports:
+      - "8090:8090"
+    depends_on:
+      - service-registry
+    networks:
+      - quiz-network
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+
+  question-service-1:
+    build: ./question-service
+    container_name: question-service-1
+    ports:
+      - "8080:8080"
+    depends_on:
+      - service-registry
+    networks:
+      - quiz-network
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+
+  question-service-2:
+    build: ./question-service
+    container_name: question-service-2
+    ports:
+      - "8081:8081"
+    depends_on:
+      - service-registry
+    networks:
+      - quiz-network
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8765:8765"
+    depends_on:
+      - service-registry
+      - quiz-service
+      - question-service-1
+      - question-service-2
+    networks:
+      - quiz-network
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://service-registry:8761/eureka/
+
+networks:
+  quiz-network:
+    driver: bridge
